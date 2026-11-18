@@ -1,0 +1,30 @@
+<%- include('partials/header', { title: 'Beranda' }) %>
+<h1 class="text-2xl font-bold">Halo, <%= user.name.split(' ')[0] %></h1>
+<p class="mb-6 text-slate-600">Butuh obat atau perlengkapan P3K? Ajukan di sini, lalu ambil di sekretariat setelah disetujui admin.</p>
+
+<div class="mb-8 grid gap-3 sm:grid-cols-3">
+  <a href="/riwayat?jenis=ambil" class="card hover:border-teal-600"><div class="text-3xl font-bold text-teal-700"><%= counts.ambil %></div><div class="text-sm text-slate-600">Pengambilan berjalan</div></a>
+  <a href="/riwayat?jenis=pinjam" class="card hover:border-teal-600"><div class="text-3xl font-bold text-teal-700"><%= counts.pinjam %></div><div class="text-sm text-slate-600">Peminjaman berjalan</div></a>
+  <a href="/riwayat?jenis=donasi" class="card hover:border-teal-600"><div class="text-3xl font-bold text-teal-700"><%= counts.donasi %></div><div class="text-sm text-slate-600">Donasi menunggu verifikasi</div></a>
+</div>
+
+<div class="mb-3 flex items-end justify-between"><h2 class="text-lg font-semibold">Obat yang tersedia</h2><a href="/p3k" class="text-sm font-medium text-teal-700 underline">Lihat semua</a></div>
+<% if (!meds.length) { %><p class="text-sm text-slate-500">Belum ada obat tersedia.</p><% } %>
+<div class="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+  <% meds.forEach((m) => { %><%- include('partials/med-card', { m, href: (m.type === 'pinjam' ? '/pinjam/' : '/p3k/') + m.id }) %><% }) %>
+</div>
+
+<h2 class="mb-3 text-lg font-semibold">Aktivitas terakhir</h2>
+<% if (!recent.length) { %>
+  <p class="text-sm text-slate-500">Belum ada aktivitas. Mulai dari menu P3K atau Peminjaman.</p>
+<% } else { %>
+  <div class="card divide-y divide-slate-100 !p-0">
+    <% recent.forEach((t) => { %>
+      <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+        <div><span class="font-medium"><%= t.medicine_name %></span> <span class="text-slate-500">x<%= t.qty %>, <%= t.type === 'ambil' ? 'pengambilan' : 'peminjaman' %></span></div>
+        <span class="<%= statusClass(t.status) %>"><%= statusLabel(t.status, t.type) %></span>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+<%- include('partials/footer') %>

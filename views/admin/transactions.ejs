@@ -1,0 +1,31 @@
+<%- include('../partials/header', { title: 'Status ' + jenis }) %>
+<h1 class="mb-4 text-2xl font-bold">Status <%= jenis %></h1>
+<form method="get" class="mb-4 flex flex-wrap gap-2">
+  <input name="q" value="<%= q %>" placeholder="Cari nama, NIM, atau obat" class="input max-w-xs">
+  <select name="status" class="input max-w-[12rem]">
+    <option value="">Semua status</option>
+    <% statuses.forEach((s) => { %><option value="<%= s %>" <%= s === status ? 'selected' : '' %>><%= statusLabel(s, jenis === 'peminjaman' || jenis === 'pengembalian' ? 'pinjam' : 'ambil') %></option><% }) %>
+  </select>
+  <button class="btn-ghost">Filter</button>
+</form>
+<div class="card overflow-x-auto !p-0">
+  <table class="w-full">
+    <thead class="border-b border-slate-200"><tr><th class="th">Mahasiswa</th><th class="th">Obat</th><th class="th">Jadwal</th><th class="th">Status</th><th></th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% if (!rows.length) { %><tr><td colspan="5" class="td text-slate-500">Tidak ada data.</td></tr><% } %>
+      <% rows.forEach((t) => { %>
+        <tr>
+          <td class="td"><%= t.user_name %><div class="text-xs text-slate-500"><%= t.nim %></div></td>
+          <td class="td"><%= t.medicine_name %> x<%= t.qty %></td>
+          <td class="td"><%= t.pickup_date %><%= t.due_date ? ' sampai ' + t.due_date : '' %></td>
+          <td class="td">
+            <span class="<%= statusClass(t.status) %>"><%= statusLabel(t.status, t.type) %></span>
+            <% if (t.return_requested && t.status === 'diserahkan') { %><span class="<%= statusClass('menunggu') %> ml-1">Minta dikembalikan</span><% } %>
+          </td>
+          <td class="td"><a class="text-teal-700 underline" href="/admin/transaksi/<%= t.id %>">Detail</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

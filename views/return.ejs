@@ -1,0 +1,43 @@
+<%- include('partials/header', { title: 'Pengembalian' }) %>
+<h1 class="mb-1 text-2xl font-bold">Pengembalian obat</h1>
+<p class="mb-6 text-sm text-slate-600">Semua pinjaman yang sudah disetujui muncul di sini. Setelah barang diserahkan admin, kamu bisa mengajukan pengembalian sebelum batas waktunya.</p>
+
+<% if (!rows.length) { %>
+  <p class="text-slate-500">Belum ada pinjaman aktif. Ajukan dulu di menu <a href="/pinjam" class="font-medium text-teal-700 underline">Peminjaman</a>.</p>
+<% } else { %>
+  <div class="grid gap-3">
+    <% rows.forEach((t) => { const late = t.status === 'diserahkan' && t.due_date < today(); %>
+      <div class="card flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="font-semibold"><%= t.medicine_name %> <span class="font-normal text-slate-500">x<%= t.qty %></span></div>
+          <div class="text-sm text-slate-600">Ambil <%= t.pickup_date %>, kembalikan paling lambat <%= t.due_date %></div>
+          <% if (late) { %><div class="text-sm font-medium text-rose-600">Sudah lewat batas pengembalian</div><% } %>
+          <% if (t.status === 'disetujui') { %><div class="text-sm text-sky-700">Disetujui. Ambil barang di sekretariat, lalu admin akan mengonfirmasi penyerahan.</div><% } %>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="<%= statusClass(t.status) %>"><%= statusLabel(t.status, 'pinjam') %></span>
+          <% if (t.status === 'diserahkan') { %>
+            <% if (t.return_requested) { %>
+              <span class="<%= statusClass('menunggu') %>">Menunggu konfirmasi admin</span>
+            <% } else { %>
+              <form method="post" action="/pengembalian/<%= t.id %>"><button class="btn-primary">Ajukan pengembalian</button></form>
+            <% } %>
+          <% } %>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (done.length) { %>
+  <h2 class="mb-3 mt-8 font-semibold">Sudah dikembalikan</h2>
+  <div class="card divide-y divide-slate-100 !p-0">
+    <% done.forEach((t) => { %>
+      <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+        <div><span class="font-medium"><%= t.medicine_name %></span> <span class="text-slate-500">x<%= t.qty %>, kondisi <%= t.return_condition || 'baik' %></span></div>
+        <span class="<%= statusClass('dikembalikan') %>">Dikembalikan</span>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+<%- include('partials/footer') %>

@@ -1,0 +1,24 @@
+<%- include('../partials/header', { title: isNew ? 'Tambah obat' : 'Edit obat' }) %>
+<a href="/admin/obat" class="text-sm text-teal-700 underline">Kembali ke daftar obat</a>
+<h1 class="mb-4 mt-2 text-2xl font-bold"><%= isNew ? 'Tambah obat' : 'Edit obat' %></h1>
+<% if (errors.length) { %>
+  <ul class="mb-4 max-w-xl list-disc rounded-lg border border-rose-200 bg-rose-50 py-3 pl-8 pr-4 text-sm text-rose-800"><% errors.forEach((e) => { %><li><%= e %></li><% }) %></ul>
+<% } %>
+<form method="post" action="<%= isNew ? '/admin/obat' : '/admin/obat/' + med.id %>" enctype="multipart/form-data" class="card max-w-xl space-y-4">
+  <div><label class="label" for="name">Nama obat</label><input id="name" name="name" value="<%= med.name || '' %>" class="input" required></div>
+  <div class="grid gap-4 sm:grid-cols-3">
+    <div><label class="label" for="category">Kategori</label><input id="category" name="category" value="<%= med.category || '' %>" placeholder="Umum" class="input"></div>
+    <div><label class="label" for="type">Jenis</label>
+      <select id="type" name="type" class="input"><option value="sekali_pakai">Sekali pakai (diambil)</option><option value="pinjam" <%= med.type === 'pinjam' ? 'selected' : '' %>>Dipinjam</option></select></div>
+    <div><label class="label" for="stock">Stok</label><input id="stock" type="number" min="0" name="stock" value="<%= Number.isInteger(med.stock) ? med.stock : 0 %>" class="input" required></div>
+  </div>
+  <div><label class="label" for="description">Deskripsi</label><textarea id="description" name="description" rows="2" class="input"><%= med.description || '' %></textarea></div>
+  <div><label class="label" for="usage_info">Cara pakai</label><textarea id="usage_info" name="usage_info" rows="2" class="input"><%= med.usage_info || '' %></textarea></div>
+  <div>
+    <label class="label" for="image">Foto (JPG, PNG, atau WEBP, maksimal 2 MB)</label>
+    <% if (med.image_url) { %><img src="<%= med.image_url %>" alt="" class="mb-2 h-24 rounded-lg object-cover"><% } %>
+    <input id="image" type="file" name="image" accept="image/png,image/jpeg,image/webp" class="text-sm">
+  </div>
+  <div class="flex gap-2"><button class="btn-primary">Simpan</button><a href="/admin/obat" class="btn-ghost">Batal</a></div>
+</form>
+<%- include('../partials/footer') %>

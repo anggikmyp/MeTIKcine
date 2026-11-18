@@ -1,0 +1,34 @@
+<%- include('../partials/header', { title: 'Detail donasi' }) %>
+<a href="/admin/status/donasi" class="text-sm text-teal-700 underline">Kembali ke daftar</a>
+<h1 class="mb-4 mt-2 text-2xl font-bold">Detail donasi</h1>
+<div class="grid gap-6 md:grid-cols-2">
+  <div class="card space-y-2 text-sm">
+    <div class="flex items-center justify-between"><span class="font-semibold"><%= d.medicine_name %> x<%= d.qty %></span><span class="<%= statusClass(d.status) %>"><%= statusLabel(d.status, 'donasi') %></span></div>
+    <div><span class="text-slate-500">Donatur:</span> <%= d.user_name %> (<%= d.nim %>)<%= d.phone ? ', ' + d.phone : '' %></div>
+    <div><span class="text-slate-500">Kondisi:</span> <%= d.condition_type === 'baru' ? 'Baru' : 'Sisa pakai' %>. <%= d.condition_desc %></div>
+    <div><span class="text-slate-500">Kadaluwarsa:</span> <%= d.expiry_date %><%= d.expiry_date <= today() ? ' (sudah kadaluwarsa)' : '' %></div>
+    <% if (d.admin_note) { %><div><span class="text-slate-500">Catatan admin:</span> <%= d.admin_note %></div><% } %>
+  </div>
+  <div class="card space-y-3">
+    <h2 class="font-semibold">Tindakan</h2>
+    <% if (d.status === 'menunggu') { %>
+      <form method="post" action="/admin/donasi/<%= d.id %>/terima" class="space-y-2">
+        <label class="label" for="medicine_id">Tambahkan ke stok</label>
+        <select id="medicine_id" name="medicine_id" class="input">
+          <% meds.forEach((m) => { %><option value="<%= m.id %>" <%= String(m.id) === String(guessId) ? 'selected' : '' %>><%= m.name %> (stok <%= m.stock %>)</option><% }) %>
+          <option value="baru" <%= guessId === '' ? 'selected' : '' %>>Buat obat baru dari donasi ini</option>
+        </select>
+        <label class="label" for="type_baru">Jika obat baru, jenisnya</label>
+        <select id="type_baru" name="type_baru" class="input"><option value="sekali_pakai">Sekali pakai</option><option value="pinjam">Dipinjam</option></select>
+        <input name="admin_note" placeholder="Catatan (opsional)" class="input">
+        <button class="btn-primary w-full">Terima donasi</button>
+      </form>
+      <form method="post" action="/admin/donasi/<%= d.id %>/tolak" class="space-y-2">
+        <input name="admin_note" placeholder="Alasan penolakan" class="input"><button class="btn-danger w-full">Tolak donasi</button>
+      </form>
+    <% } else { %>
+      <p class="text-sm text-slate-500">Donasi ini sudah diproses.</p>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>
