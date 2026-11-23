@@ -2,60 +2,36 @@ require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
-const session = require('express-session');
+const cors = require('cors');
+const helmet = require('helmet');
 
 fs.mkdirSync(path.join(__dirname, 'public', 'uploads'), { recursive: true });
 
 const app = express();
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev-secret-ganti-di-produksi',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 8 },
-}));
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+const origins = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+app.use(cors({ origin: origins.length ? origins : true }));
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
-// Label & warna status dipakai di semua view
-const LABEL = {
-  menunggu: 'Menunggu Persetujuan', disetujui: 'Disetujui', ditolak: 'Ditolak',
-  diserahkan: 'Obat Telah Diserahkan', dikembalikan: 'Dikembalikan',
-  dibatalkan: 'Dibatalkan', diterima: 'Diterima',
-};
-const COLOR = {
-  menunggu: 'bg-amber-100 text-amber-800', disetujui: 'bg-sky-100 text-sky-800',
-  diterima: 'bg-emerald-100 text-emerald-800', diserahkan: 'bg-emerald-100 text-emerald-800',
-  dikembalikan: 'bg-slate-200 text-slate-700', ditolak: 'bg-rose-100 text-rose-800',
-  dibatalkan: 'bg-slate-100 text-slate-500',
-};
-app.locals.statusLabel = (s, jenis) => {
-  if (jenis === 'donasi' && s === 'menunggu') return 'Menunggu Verifikasi';
-  if (jenis === 'pinjam' && s === 'diserahkan') return 'Sedang Dipinjam';
-  return LABEL[s] || s;
-};
-app.locals.statusClass = (s) =>
-  'inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ' + (COLOR[s] || 'bg-slate-100');
-app.locals.today = require('./lib/util').today;
+app.use('/api/v1', require('./routes/api/auth'));
+// route lain ditambahkan di sini nanti, mis.:
+// app.use('/api/v1', require('./routes/api/medicines'));
 
-app.use((req, res, next) => {
-  res.locals.user = req.session.user || null;
-  res.locals.flash = req.session.flash || null;
-  res.locals.path = req.path;
-  delete req.session.flash;
-  next();
-});
+app.use((req, res) =>
+  res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan.' } }));
 
-app.use('/', require('./routes/auth'));
-app.use('/admin', require('./routes/admin'));
-app.use('/', require('./routes/student'));
-
-app.use((req, res) => res.status(404).render('error', { message: 'Halaman tidak ditemukan.' }));
 app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: { code: 'INVALID_JSON', message: 'Format JSON tidak valid.' } });
+  }
+  if (err.user) {
+    return res.status(err.status || 400).json({ error: { code: err.code || 'BAD_REQUEST', message: err.message } });
+  }
   console.error(err);
-  res.status(500).render('error', { message: 'Terjadi kesalahan pada server. Coba lagi sebentar lagi.' });
+  res.status(500).json({ error: { code: 'SERVER_ERROR', message: 'Terjadi kesalahan pada server.' } });
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`MatikCine berjalan di http://localhost:${port}`));
+app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
+
