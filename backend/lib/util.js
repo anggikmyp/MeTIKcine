@@ -15,6 +15,11 @@ const flash = (req, type, text) => { req.session.flash = { type, text }; };
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 // Error yang pesannya aman ditampilkan ke pengguna
-const fail = (msg) => { const e = new Error(msg); e.user = true; throw e; };
-
+const fail = (msg, status = 400, code = 'BAD_REQUEST') => {
+  const e = new Error(msg);
+  e.user = true;
+  e.status = status;
+  e.code = code;
+  throw e;
+};
 module.exports = { today, addDays, isDate, flash, wrap, fail };

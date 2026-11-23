@@ -1,19 +1,22 @@
-const { flash } = require('../lib/util');
+const jwt = require('jsonwebtoken');
+const { fail } = require('../lib/util');
 
 exports.requireLogin = (req, res, next) => {
-  if (!req.session.user) {
-    flash(req, 'error', 'Silakan masuk terlebih dahulu.');
-    return res.redirect('/login');
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) fail('Silakan masuk terlebih dahulu.', 401, 'UNAUTHORIZED');
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (e) {
+    fail('Sesi habis, silakan masuk lagi.', 401, 'UNAUTHORIZED');
   }
   next();
 };
 
-exports.requireRole = (role) => (req, res, next) => {
-  const u = req.session.user;
-  if (!u) {
-    flash(req, 'error', 'Silakan masuk terlebih dahulu.');
-    return res.redirect('/login');
-  }
-  if (u.role !== role) return res.redirect(u.role === 'admin' ? '/admin' : '/');
-  next();
-};
+exports.requireRole = (role) => [
+  exports.requireLogin,
+  (req, res, next) => {
+    if (req.user.role !== role) fail('Anda tidak punya akses.', 403, 'FORBIDDEN');
+    next();
+  },
+];
