@@ -1,0 +1,16 @@
+<%- include('partials/header', { title: k.title }) %>
+<h1 class="mb-1 text-2xl font-bold"><%= k.title %></h1>
+<p class="mb-4 text-sm text-slate-600"><%= kind === 'p3k' ? 'Obat dan perlengkapan sekali pakai. Ada batas pengambilan per hari.' : 'Barang yang dipinjam harus dikembalikan sesuai tanggal yang diajukan.' %></p>
+<form method="get" class="mb-6 flex flex-wrap gap-2">
+  <input name="q" value="<%= q %>" placeholder="Cari nama obat" class="input max-w-xs">
+  <select name="kategori" class="input max-w-[12rem]">
+    <option value="">Semua kategori</option>
+    <% cats.forEach((c) => { %><option <%= c === cat ? 'selected' : '' %>><%= c %></option><% }) %>
+  </select>
+  <button class="btn-primary">Cari</button>
+</form>
+<% if (!meds.length) { %><p class="text-slate-500">Obat tidak ditemukan.</p><% } %>
+<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+  <% meds.forEach((m) => { %><%- include('partials/med-card', { m, href: '/' + kind + '/' + m.id }) %><% }) %>
+</div>
+<%- include('partials/footer') %>

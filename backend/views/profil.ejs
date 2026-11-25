@@ -1,0 +1,17 @@
+<%- include('partials/header', { title: 'Profil' }) %>
+<h1 class="mb-4 text-2xl font-bold">Profil saya</h1>
+<form method="post" action="/profil" class="card max-w-xl space-y-4">
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div><label class="label" for="name">Nama</label><input id="name" name="name" value="<%= me.name %>" class="input" required></div>
+    <div><label class="label">Email</label><input value="<%= me.email %>" class="input bg-slate-100" disabled></div>
+    <div><label class="label">NIM</label><input value="<%= me.nim || '-' %>" class="input bg-slate-100" disabled></div>
+    <div><label class="label" for="phone">Nomor telepon</label><input id="phone" name="phone" value="<%= me.phone || '' %>" class="input"></div>
+    <% if (me.role === 'admin') { %>
+      <div class="sm:col-span-2"><label class="label" for="job_title">Jabatan</label><input id="job_title" name="job_title" value="<%= me.job_title || '' %>" class="input"></div>
+    <% } else { %>
+      <div class="sm:col-span-2"><label class="label" for="class_name">Kelas</label><input id="class_name" name="class_name" value="<%= me.class_name || '' %>" class="input"></div>
+    <% } %>
+  </div>
+  <button class="btn-primary">Simpan perubahan</button>
+</form>
+<%- include('partials/footer') %>

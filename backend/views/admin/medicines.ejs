@@ -1,0 +1,34 @@
+<%- include('../partials/header', { title: 'Kelola obat' }) %>
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">Kelola obat</h1>
+  <a href="/admin/obat/tambah" class="btn-primary">Tambah obat</a>
+</div>
+<form method="get" class="mb-4 flex gap-2"><input name="q" value="<%= q %>" placeholder="Cari nama atau kategori" class="input max-w-xs"><button class="btn-ghost">Cari</button></form>
+<div class="card overflow-x-auto !p-0">
+  <table class="w-full">
+    <thead class="border-b border-slate-200"><tr><th class="th">Obat</th><th class="th">Kategori</th><th class="th">Jenis</th><th class="th">Stok</th><th></th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% if (!meds.length) { %><tr><td colspan="5" class="td text-slate-500">Belum ada obat. Klik "Tambah obat" untuk mulai.</td></tr><% } %>
+      <% meds.forEach((m) => { %>
+        <tr>
+          <td class="td">
+            <div class="flex items-center gap-3">
+              <div class="grid h-10 w-10 place-items-center overflow-hidden rounded bg-teal-50"><% if (m.image_url) { %><img src="<%= m.image_url %>" alt="" class="h-10 w-10 object-cover"><% } else { %>💊<% } %></div>
+              <span class="font-medium"><%= m.name %></span>
+            </div>
+          </td>
+          <td class="td"><%= m.category %></td>
+          <td class="td"><%= m.type === 'pinjam' ? 'Dipinjam' : 'Sekali pakai' %></td>
+          <td class="td font-medium <%= m.stock <= LOW_STOCK ? 'text-amber-700' : '' %>"><%= m.stock %></td>
+          <td class="td">
+            <div class="flex justify-end gap-2">
+              <a href="/admin/obat/<%= m.id %>/edit" class="btn-ghost">Edit</a>
+              <form method="post" action="/admin/obat/<%= m.id %>/hapus" onsubmit="return confirm('Hapus <%= m.name.replace(/['\\]/g, '') %>?')"><button class="btn-danger">Hapus</button></form>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

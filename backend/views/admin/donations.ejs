@@ -1,0 +1,28 @@
+<%- include('../partials/header', { title: 'Status donasi' }) %>
+<h1 class="mb-4 text-2xl font-bold">Status donasi</h1>
+<form method="get" class="mb-4 flex flex-wrap gap-2">
+  <input name="q" value="<%= q %>" placeholder="Cari nama, NIM, atau obat" class="input max-w-xs">
+  <select name="status" class="input max-w-[12rem]">
+    <option value="">Semua status</option>
+    <% statuses.forEach((s) => { %><option value="<%= s %>" <%= s === status ? 'selected' : '' %>><%= statusLabel(s, 'donasi') %></option><% }) %>
+  </select>
+  <button class="btn-ghost">Filter</button>
+</form>
+<div class="card overflow-x-auto !p-0">
+  <table class="w-full">
+    <thead class="border-b border-slate-200"><tr><th class="th">Donatur</th><th class="th">Obat</th><th class="th">Kadaluwarsa</th><th class="th">Status</th><th></th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% if (!rows.length) { %><tr><td colspan="5" class="td text-slate-500">Tidak ada data.</td></tr><% } %>
+      <% rows.forEach((d) => { %>
+        <tr>
+          <td class="td"><%= d.user_name %><div class="text-xs text-slate-500"><%= d.nim %></div></td>
+          <td class="td"><%= d.medicine_name %> x<%= d.qty %></td>
+          <td class="td"><%= d.expiry_date %></td>
+          <td class="td"><span class="<%= statusClass(d.status) %>"><%= statusLabel(d.status, 'donasi') %></span></td>
+          <td class="td"><a class="text-teal-700 underline" href="/admin/donasi/<%= d.id %>">Detail</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

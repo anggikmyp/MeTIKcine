@@ -1,0 +1,10 @@
+<a href="<%= href %>" class="card block overflow-hidden !p-0 hover:border-teal-600">
+  <div class="grid h-32 place-items-center bg-teal-50 text-4xl">
+    <% if (m.image_url) { %><img src="<%= m.image_url %>" alt="<%= m.name %>" class="h-32 w-full object-cover"><% } else { %>💊<% } %>
+  </div>
+  <div class="p-4">
+    <div class="font-semibold"><%= m.name %></div>
+    <div class="text-sm text-slate-500"><%= m.category %></div>
+    <div class="mt-2 text-sm <%= m.stock > 0 ? 'text-teal-700' : 'text-rose-600' %>"><%= m.stock > 0 ? 'Stok ' + m.stock : 'Stok habis' %></div>
+  </div>
+</a>

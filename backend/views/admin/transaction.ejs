@@ -1,0 +1,40 @@
+<%- include('../partials/header', { title: 'Detail pengajuan' }) %>
+<a href="/admin/status/<%= t.type === 'ambil' ? 'pengambilan' : (['diserahkan','dikembalikan'].includes(t.status) ? 'pengembalian' : 'peminjaman') %>" class="text-sm text-teal-700 underline">Kembali ke daftar</a>
+<h1 class="mb-4 mt-2 text-2xl font-bold">Detail <%= t.type === 'ambil' ? 'pengambilan' : 'peminjaman' %></h1>
+<div class="grid gap-6 md:grid-cols-2">
+  <div class="card space-y-2 text-sm">
+    <div class="flex items-center justify-between"><span class="font-semibold"><%= t.medicine_name %> x<%= t.qty %></span><span class="<%= statusClass(t.status) %>"><%= statusLabel(t.status, t.type) %></span></div>
+    <div><span class="text-slate-500">Mahasiswa:</span> <%= t.user_name %> (<%= t.nim %>)<%= t.phone ? ', ' + t.phone : '' %></div>
+    <div><span class="text-slate-500">Alasan:</span> <%= t.reason %></div>
+    <div><span class="text-slate-500">Tanggal ambil:</span> <%= t.pickup_date %></div>
+    <% if (t.due_date) { %><div><span class="text-slate-500">Batas kembali:</span> <%= t.due_date %><%= t.status === 'diserahkan' && t.due_date < today() ? ' (terlambat)' : '' %></div><% } %>
+    <div><span class="text-slate-500">Stok saat ini:</span> <%= t.medicine_stock %></div>
+    <% if (t.return_requested && t.status === 'diserahkan') { %><div class="font-medium text-amber-700">Mahasiswa sudah mengajukan pengembalian.</div><% } %>
+    <% if (t.return_condition) { %><div><span class="text-slate-500">Kondisi saat kembali:</span> <%= t.return_condition %></div><% } %>
+    <% if (t.admin_note) { %><div><span class="text-slate-500">Catatan admin:</span> <%= t.admin_note %></div><% } %>
+  </div>
+  <div class="card space-y-3">
+    <h2 class="font-semibold">Tindakan</h2>
+    <% if (t.status === 'menunggu') { %>
+      <form method="post" action="/admin/transaksi/<%= t.id %>/setujui" class="space-y-2">
+        <input name="admin_note" placeholder="Catatan (opsional)" class="input"><button class="btn-primary w-full">Setujui</button>
+      </form>
+      <form method="post" action="/admin/transaksi/<%= t.id %>/tolak" class="space-y-2">
+        <input name="admin_note" placeholder="Alasan penolakan" class="input"><button class="btn-danger w-full">Tolak</button>
+      </form>
+    <% } else if (t.status === 'disetujui') { %>
+      <p class="text-sm text-slate-600">Setelah obat diberikan langsung ke mahasiswa, konfirmasi penyerahan agar stok berkurang.</p>
+      <form method="post" action="/admin/transaksi/<%= t.id %>/serahkan"><button class="btn-primary w-full">Konfirmasi obat telah diserahkan</button></form>
+    <% } else if (t.status === 'diserahkan' && t.type === 'pinjam') { %>
+      <form method="post" action="/admin/transaksi/<%= t.id %>/kembali" class="space-y-2">
+        <label class="label" for="rc">Kondisi barang</label>
+        <select id="rc" name="return_condition" class="input"><option value="baik">Baik</option><option value="rusak">Rusak</option></select>
+        <input name="admin_note" placeholder="Catatan (opsional)" class="input">
+        <button class="btn-primary w-full">Konfirmasi pengembalian</button>
+      </form>
+    <% } else { %>
+      <p class="text-sm text-slate-500">Tidak ada tindakan lagi untuk pengajuan ini.</p>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>
