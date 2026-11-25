@@ -15,8 +15,11 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 app.use('/api/v1', require('./routes/api/auth'));
-// route lain ditambahkan di sini nanti, mis.:
-// app.use('/api/v1', require('./routes/api/medicines'));
+app.use('/api/v1', require('./routes/api/medicines'));
+app.use('/api/v1', require('./routes/api/transactions'));
+// Aktifkan baris di bawah jika filenya sudah dibuat di routes/api/:
+app.use('/api/v1', require('./routes/api/donations'));
+app.use('/api/v1', require('./routes/api/admin'));
 
 app.use((req, res) =>
   res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan.' } }));

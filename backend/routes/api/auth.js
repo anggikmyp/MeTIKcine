@@ -5,29 +5,40 @@ const db = require('../../db');
 const { wrap, fail } = require('../../lib/util');
 const { requireLogin } = require('../../middleware/auth');
 
+// GET /api/v1/config
 router.get('/config', (req, res) => {
-  res.json({ data: {
-    daily_quota: parseInt(process.env.DAILY_QUOTA, 10) || 3,
-    max_loan_days: parseInt(process.env.MAX_LOAN_DAYS, 10) || 7,
-    low_stock: parseInt(process.env.LOW_STOCK, 10) || 5,
-    email_domain: process.env.ALLOWED_EMAIL_DOMAIN || null,
-  } });
+  res.json({
+    data: {
+      daily_quota: parseInt(process.env.DAILY_QUOTA, 10) || 3,
+      max_loan_days: parseInt(process.env.MAX_LOAN_DAYS, 10) || 7,
+      low_stock: parseInt(process.env.LOW_STOCK, 10) || 5,
+      email_domain: process.env.ALLOWED_EMAIL_DOMAIN || null,
+    },
+  });
 });
 
+// POST /api/v1/auth/login
 router.post('/auth/login', wrap(async (req, res) => {
   const id = (req.body.identifier || '').trim().toLowerCase();
   const pw = req.body.password || '';
   const [rows] = await db.query(
     `SELECT *, (locked_until IS NOT NULL AND locked_until > NOW()) AS is_locked
-       FROM db_mtc_users WHERE email = ? OR nim = ? LIMIT 1`, [id, id]);
+       FROM db_mtc_users WHERE email = ? OR nim = ? LIMIT 1`,
+    [id, id]
+  );
   const u = rows[0];
 
-  if (u && u.is_locked) fail('Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.', 423, 'ACCOUNT_LOCKED');
+  if (u && u.is_locked) {
+    fail('Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.', 423, 'ACCOUNT_LOCKED');
+  }
   if (!u || !(await bcrypt.compare(pw, u.password_hash))) {
     if (u) {
       const attempts = u.failed_attempts + 1;
       if (attempts >= 5) {
-        await db.query('UPDATE db_mtc_users SET failed_attempts = 0, locked_until = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = ?', [u.id]);
+        await db.query(
+          'UPDATE db_mtc_users SET failed_attempts = 0, locked_until = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = ?',
+          [u.id]
+        );
       } else {
         await db.query('UPDATE db_mtc_users SET failed_attempts = ? WHERE id = ?', [attempts, u.id]);
       }
@@ -41,6 +52,7 @@ router.post('/auth/login', wrap(async (req, res) => {
   res.json({ data: { token, user } });
 }));
 
+// POST /api/v1/auth/register
 router.post('/auth/register', wrap(async (req, res) => {
   const f = {
     name: (req.body.name || '').trim(),
@@ -67,13 +79,35 @@ router.post('/auth/register', wrap(async (req, res) => {
   const hash = await bcrypt.hash(pw, 10);
   await db.query(
     "INSERT INTO db_mtc_users (name, email, nim, phone, password_hash, role) VALUES (?, ?, ?, ?, ?, 'mahasiswa')",
-    [f.name, f.email, f.nim, f.phone || null, hash]);
+    [f.name, f.email, f.nim, f.phone || null, hash]
+  );
   res.status(201).json({ data: { message: 'Akun berhasil dibuat. Silakan masuk.' } });
 }));
 
-router.get('/auth/me', requireLogin, (req, res) => {
-  const { id, name, email, nim, role } = req.user;
-  res.json({ data: { id, name, email, nim, role } });
-});
+// GET /api/v1/auth/me
+router.get('/auth/me', requireLogin, wrap(async (req, res) => {
+  const [[me]] = await db.query(
+    'SELECT id, name, email, nim, phone, class_name, job_title, role FROM db_mtc_users WHERE id = ?',
+    [req.user.id]
+  );
+  res.json({ data: me });
+}));
+
+// PUT /api/v1/auth/profile
+router.put('/auth/profile', requireLogin, wrap(async (req, res) => {
+  const name = (req.body.name || '').trim();
+  const phone = (req.body.phone || '').trim() || null;
+  const class_name = (req.body.class_name || '').trim() || null;
+  const job_title = (req.body.job_title || '').trim() || null;
+
+  if (!name) fail('Nama wajib diisi.');
+
+  await db.query(
+    'UPDATE db_mtc_users SET name = ?, phone = ?, class_name = ?, job_title = ? WHERE id = ?',
+    [name, phone, class_name, job_title, req.user.id]
+  );
+
+  res.json({ data: { message: 'Profil berhasil diperbarui.' } });
+}));
 
 module.exports = router;

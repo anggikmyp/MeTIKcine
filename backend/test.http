@@ -1,0 +1,91 @@
+### 1. Cek Config (Publik)
+GET http://localhost:3000/api/v1/config
+
+### 2. Login Admin (Jalankan ini dulu untuk dapat token)
+# @name loginAdmin
+POST http://localhost:3000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "admin@pnj.ac.id",
+  "password": "KataSandi123"
+}
+
+### Simpan Token Admin otomatis dari response di atas
+@adminToken = {{loginAdmin.response.body.data.token}}
+
+### 3. Cek Profil Admin (/auth/me)
+GET http://localhost:3000/api/v1/auth/me
+Authorization: Bearer {{adminToken}}
+
+### 4. Ambil Semua Daftar Obat (/medicines)
+GET http://localhost:3000/api/v1/medicines
+Authorization: Bearer {{adminToken}}
+
+### 5. Cek Dashboard Admin (/admin/dashboard)
+GET http://localhost:3000/api/v1/admin/dashboard
+Authorization: Bearer {{adminToken}}
+
+### 6. Daftar Mahasiswa Baru (/auth/register)
+POST http://localhost:3000/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "Anggi Komyati",
+  "email": "anggi@mhsw.pnj.ac.id",
+  "nim": "2507431013",
+  "phone": "081234567890",
+  "password": "Password123"
+}
+
+### 7. Login Mahasiswa
+# @name loginMhs
+POST http://localhost:3000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "anggi@mhsw.pnj.ac.id",
+  "password": "Password123"
+}
+
+@mhsToken = {{loginMhs.response.body.data.token}}
+
+### 8. Mahasiswa Ajukan Pengambilan Obat (Panadol id=1)
+POST http://localhost:3000/api/v1/transactions
+Authorization: Bearer {{mhsToken}}
+Content-Type: application/json
+
+{
+  "medicine_id": 1,
+  "type": "ambil",
+  "qty": 1,
+  "reason": "Sakit kepala saat praktikum",
+  "pickup_date": "2026-11-26"
+}
+
+### 9. Mahasiswa Ajukan Donasi Obat
+POST http://localhost:3000/api/v1/donations
+Authorization: Bearer {{mhsToken}}
+Content-Type: application/json
+
+{
+  "medicine_name": "Promag",
+  "qty": 5,
+  "expiry_date": "2027-08-01",
+  "condition_type": "baru",
+  "condition_desc": "Masih tersegel utuh dalam strip"
+}
+
+### 10. Admin Lihat Semua Transaksi Masuk
+GET http://localhost:3000/api/v1/transactions
+Authorization: Bearer {{adminToken}}
+
+### 11. Admin Setujui Transaksi id=1
+PATCH http://localhost:3000/api/v1/transactions/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "action": "setujui",
+  "admin_note": "Silakan ambil di sekretariat TIK"
+}
