@@ -1,4 +1,4 @@
-# MatikCine
+# MetikCine
 
 Website peminjaman, pengambilan, dan donasi obat P3K untuk mahasiswa TIK PNJ.
 Stack: Node.js + Express, EJS, Tailwind CSS (CDN), MySQL 8.
